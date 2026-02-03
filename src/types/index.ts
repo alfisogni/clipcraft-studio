@@ -6,6 +6,8 @@ export type ClipStatus = 'pending' | 'processing' | 'ready';
 
 export type VideoFormat = 'vertical' | 'horizontal';
 
+export type StatusFilter = 'all' | 'pending' | 'ready' | 'processing' | 'favorites';
+
 export interface Clip {
   id: string;
   title: string;
@@ -16,6 +18,8 @@ export interface Clip {
   status: ClipStatus;
   format: VideoFormat;
   thumbnailUrl?: string;
+  isFavorite?: boolean; // New: mark as favorite
+  isSelected?: boolean; // New: for batch export
 }
 
 export interface Project {

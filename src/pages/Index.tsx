@@ -21,9 +21,19 @@ const Index: React.FC = () => {
     projects,
     selectedProject,
     stats,
+    filterCounts,
+    filteredClips,
+    selectedClips,
+    statusFilter,
+    setStatusFilter,
     createProject,
     selectProject,
     clearSelection,
+    updateClipContent,
+    toggleClipFavorite,
+    toggleClipSelect,
+    selectAllClips,
+    exportSelectedClips,
   } = useProjects();
 
   // Navigation handlers
@@ -69,7 +79,17 @@ const Index: React.FC = () => {
       return (
         <ProjectDetailView
           project={selectedProject}
+          filteredClips={filteredClips}
+          selectedClips={selectedClips}
+          filterCounts={filterCounts}
+          statusFilter={statusFilter}
+          onFilterChange={setStatusFilter}
           onBack={handleBackToDashboard}
+          onUpdateClip={updateClipContent}
+          onToggleFavorite={toggleClipFavorite}
+          onToggleSelect={toggleClipSelect}
+          onSelectAll={selectAllClips}
+          onExportSelected={exportSelectedClips}
         />
       );
 
