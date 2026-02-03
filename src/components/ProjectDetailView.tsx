@@ -3,22 +3,52 @@
  * Displays project details with all generated clips
  */
 
-import React from 'react';
-import { ArrowLeft, Film, Clock, Settings, Download, Share2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Film, Clock, Settings, Download, Share2, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ClipCard } from '@/components/ClipCard';
-import { Project } from '@/types';
+import { EditClipDialog } from '@/components/EditClipDialog';
+import { StatusFilter } from '@/components/StatusFilter';
+import { Project, Clip, StatusFilter as FilterType } from '@/types';
 
 interface ProjectDetailViewProps {
   project: Project;
+  filteredClips: Clip[];
+  selectedClips: Clip[];
+  filterCounts: {
+    all: number;
+    pending: number;
+    ready: number;
+    processing: number;
+    favorites: number;
+  };
+  statusFilter: FilterType;
+  onFilterChange: (filter: FilterType) => void;
   onBack: () => void;
+  onUpdateClip: (clipId: string, title: string, description: string) => void;
+  onToggleFavorite: (clipId: string) => void;
+  onToggleSelect: (clipId: string) => void;
+  onSelectAll: (select: boolean) => void;
+  onExportSelected: () => void;
 }
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   project,
+  filteredClips,
+  selectedClips,
+  filterCounts,
+  statusFilter,
+  onFilterChange,
   onBack,
+  onUpdateClip,
+  onToggleFavorite,
+  onToggleSelect,
+  onSelectAll,
+  onExportSelected,
 }) => {
+  const [editingClip, setEditingClip] = useState<Clip | null>(null);
+
   // Format duration for display
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -29,10 +59,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     return `${mins} min`;
   };
 
-  // Calculate statistics
-  const readyClips = project.clips.filter(c => c.status === 'ready').length;
-  const pendingClips = project.clips.filter(c => c.status === 'pending').length;
-  const processingClips = project.clips.filter(c => c.status === 'processing').length;
+  // Check if all filtered clips are selected
+  const allSelected = filteredClips.length > 0 && filteredClips.every(c => c.isSelected);
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,10 +86,17 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 <Share2 className="h-4 w-4" />
                 Compartir
               </Button>
-              <Button variant="gradient" size="sm">
-                <Download className="h-4 w-4" />
-                Exportar todo
-              </Button>
+              {selectedClips.length > 0 ? (
+                <Button variant="gradient" size="sm" onClick={onExportSelected}>
+                  <Download className="h-4 w-4" />
+                  Exportar {selectedClips.length} seleccionados
+                </Button>
+              ) : (
+                <Button variant="gradient" size="sm">
+                  <Download className="h-4 w-4" />
+                  Exportar todo
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -89,9 +124,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
             </div>
             <div className="h-10 w-px bg-border" />
             <div className="flex items-center gap-4">
-              {readyClips > 0 && <Badge variant="ready">{readyClips} listos</Badge>}
-              {pendingClips > 0 && <Badge variant="pending">{pendingClips} pendientes</Badge>}
-              {processingClips > 0 && <Badge variant="processing">{processingClips} procesando</Badge>}
+              {filterCounts.ready > 0 && <Badge variant="ready">{filterCounts.ready} listos</Badge>}
+              {filterCounts.pending > 0 && <Badge variant="pending">{filterCounts.pending} pendientes</Badge>}
+              {filterCounts.processing > 0 && <Badge variant="processing">{filterCounts.processing} procesando</Badge>}
             </div>
             <div className="ml-auto text-sm text-muted-foreground">
               Formato: <span className="font-medium text-foreground">
@@ -101,16 +136,73 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           </div>
         </div>
 
+        {/* Filters */}
+        <div className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
+          <StatusFilter
+            currentFilter={statusFilter}
+            onFilterChange={onFilterChange}
+            counts={filterCounts}
+          />
+        </div>
+
+        {/* Bulk actions bar */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => onSelectAll(!allSelected)}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {allSelected ? (
+                <CheckSquare className="h-4 w-4 text-primary" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+              <span>{allSelected ? 'Deseleccionar todo' : 'Seleccionar todo'}</span>
+            </button>
+            {selectedClips.length > 0 && (
+              <span className="text-sm text-primary font-medium">
+                {selectedClips.length} clips seleccionados
+              </span>
+            )}
+          </div>
+          <h2 className="text-lg font-semibold text-foreground">
+            {statusFilter === 'all' ? 'Todos los clips' : 
+             statusFilter === 'favorites' ? 'Clips favoritos' :
+             statusFilter === 'ready' ? 'Clips listos' :
+             statusFilter === 'pending' ? 'Clips pendientes' : 'Clips procesando'}
+          </h2>
+        </div>
+
         {/* Clips grid */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Clips generados</h2>
+        {filteredClips.length === 0 ? (
+          <div className="glass-card rounded-xl p-12 text-center">
+            <p className="text-muted-foreground">
+              No hay clips en esta categoría
+            </p>
+          </div>
+        ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {project.clips.map((clip, index) => (
-              <ClipCard key={clip.id} clip={clip} index={index} />
+            {filteredClips.map((clip, index) => (
+              <ClipCard 
+                key={clip.id} 
+                clip={clip} 
+                index={index}
+                onEdit={setEditingClip}
+                onToggleFavorite={onToggleFavorite}
+                onToggleSelect={onToggleSelect}
+              />
             ))}
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Edit Dialog */}
+      <EditClipDialog
+        clip={editingClip}
+        isOpen={!!editingClip}
+        onClose={() => setEditingClip(null)}
+        onSave={onUpdateClip}
+      />
     </div>
   );
 };
