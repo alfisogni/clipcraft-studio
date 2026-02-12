@@ -1,9 +1,6 @@
 /**
  * Index Page - Main Application Entry
  * ClipFlow: Video Creator Automation Tool
- * 
- * This application helps video creators automate their content workflow
- * by generating optimized clips from long-form videos.
  */
 
 import React, { useState } from 'react';
@@ -11,56 +8,39 @@ import { DashboardView } from '@/components/DashboardView';
 import { NewProjectView } from '@/components/NewProjectView';
 import { ProjectDetailView } from '@/components/ProjectDetailView';
 import { useProjects } from '@/hooks/useProjects';
+import type { User } from '@supabase/supabase-js';
 
 type ViewState = 'dashboard' | 'new-project' | 'project-detail';
 
-const Index: React.FC = () => {
+interface IndexProps {
+  user: User;
+  onSignOut: () => Promise<void>;
+}
+
+const Index: React.FC<IndexProps> = ({ user, onSignOut }) => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   
   const {
-    projects,
-    selectedProject,
-    stats,
-    filterCounts,
-    filteredClips,
-    selectedClips,
-    statusFilter,
-    setStatusFilter,
-    createProject,
-    selectProject,
-    clearSelection,
-    updateClipContent,
-    toggleClipFavorite,
-    toggleClipSelect,
-    selectAllClips,
-    exportSelectedClips,
-  } = useProjects();
+    projects, selectedProject, stats, filterCounts,
+    filteredClips, selectedClips, statusFilter, loading,
+    setStatusFilter, createProject, selectProject, clearSelection,
+    updateClipContent, toggleClipFavorite, toggleClipSelect,
+    selectAllClips, exportSelectedClips,
+  } = useProjects(user);
 
-  // Navigation handlers
-  const handleNewProject = () => {
-    setCurrentView('new-project');
-  };
+  const handleNewProject = () => setCurrentView('new-project');
+  const handleBackToDashboard = () => { clearSelection(); setCurrentView('dashboard'); };
+  const handleSelectProject = (projectId: string) => { selectProject(projectId); setCurrentView('project-detail'); };
 
-  const handleBackToDashboard = () => {
-    clearSelection();
-    setCurrentView('dashboard');
-  };
-
-  const handleSelectProject = (projectId: string) => {
-    selectProject(projectId);
-    setCurrentView('project-detail');
-  };
-
-  const handleCreateProject = (
+  const handleCreateProject = async (
     videoName: string,
     videoDuration: number,
     settings: Parameters<typeof createProject>[2]
   ) => {
-    createProject(videoName, videoDuration, settings);
+    await createProject(videoName, videoDuration, settings);
     setCurrentView('project-detail');
   };
 
-  // Render appropriate view based on state
   switch (currentView) {
     case 'new-project':
       return (
@@ -71,11 +51,7 @@ const Index: React.FC = () => {
       );
 
     case 'project-detail':
-      if (!selectedProject) {
-        // Fallback to dashboard if no project selected
-        setCurrentView('dashboard');
-        return null;
-      }
+      if (!selectedProject) { setCurrentView('dashboard'); return null; }
       return (
         <ProjectDetailView
           project={selectedProject}
@@ -98,6 +74,9 @@ const Index: React.FC = () => {
         <DashboardView
           projects={projects}
           stats={stats}
+          loading={loading}
+          user={user}
+          onSignOut={onSignOut}
           onNewProject={handleNewProject}
           onSelectProject={handleSelectProject}
         />
