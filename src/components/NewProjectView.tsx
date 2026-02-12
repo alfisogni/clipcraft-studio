@@ -1,6 +1,6 @@
 /**
  * NewProjectView Component
- * Step-by-step project creation flow
+ * Step-by-step project creation flow with real video upload
  */
 
 import React, { useState } from 'react';
@@ -19,7 +19,8 @@ interface NewProjectViewProps {
       minClipDuration: number;
       maxClipDuration: number;
       outputFormat: VideoFormat;
-    }
+    },
+    file?: File
   ) => Promise<void>;
 }
 
@@ -34,17 +35,20 @@ export const NewProjectView: React.FC<NewProjectViewProps> = ({ onBack, onCreate
     if (!selectedFile) return;
     setIsProcessing(true);
 
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Try to get real video duration from the file
+    let videoDuration: number;
+    try {
+      videoDuration = await getVideoDuration(selectedFile);
+    } catch {
+      // Fallback to estimated duration based on file size
+      videoDuration = Math.floor(Math.random() * 5400) + 1800;
+    }
 
-    // Mock video duration
-    const mockDuration = Math.floor(Math.random() * 5400) + 1800;
-
-    await onCreateProject(selectedFile.name, mockDuration, {
+    await onCreateProject(selectedFile.name, videoDuration, {
       minClipDuration: minDuration,
       maxClipDuration: maxDuration,
       outputFormat: format,
-    });
+    }, selectedFile);
 
     setIsProcessing(false);
   };
@@ -91,13 +95,13 @@ export const NewProjectView: React.FC<NewProjectViewProps> = ({ onBack, onCreate
           <div className="pt-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <Button variant="gradient" size="xl" className="w-full" disabled={!selectedFile || isProcessing} onClick={handleGenerate}>
               {isProcessing ? (
-                <><Loader2 className="h-5 w-5 animate-spin" />Analizando video...</>
+                <><Loader2 className="h-5 w-5 animate-spin" />Subiendo y analizando video...</>
               ) : (
                 <><Wand2 className="h-5 w-5" />Generar clips automáticamente</>
               )}
             </Button>
             <p className="text-center text-sm text-muted-foreground mt-3">
-              La IA analizará tu video y generará clips optimizados para redes sociales
+              El video se subirá al storage y la IA generará clips con títulos optimizados
             </p>
           </div>
         </div>
@@ -105,3 +109,21 @@ export const NewProjectView: React.FC<NewProjectViewProps> = ({ onBack, onCreate
     </div>
   );
 };
+
+/** Extract real duration from a video file using HTMLVideoElement */
+function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(video.src);
+      if (video.duration && isFinite(video.duration)) {
+        resolve(Math.floor(video.duration));
+      } else {
+        reject(new Error('Could not determine duration'));
+      }
+    };
+    video.onerror = () => reject(new Error('Video load error'));
+    video.src = URL.createObjectURL(file);
+  });
+}

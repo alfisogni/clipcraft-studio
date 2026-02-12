@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowLeft, Film, Clock, Settings, Download, Share2, CheckSquare, Square } from 'lucide-react';
+import { ArrowLeft, Film, Clock, Settings, Download, Share2, CheckSquare, Square, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ClipCard } from '@/components/ClipCard';
@@ -31,6 +31,9 @@ interface ProjectDetailViewProps {
   onToggleSelect: (clipId: string) => void;
   onSelectAll: (select: boolean) => void;
   onExportSelected: () => void;
+  onDeleteClip?: (clipId: string) => void;
+  onDeleteProject?: (projectId: string) => void;
+  onRegenerateClip?: (clipId: string) => void;
 }
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
@@ -46,25 +49,29 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   onToggleSelect,
   onSelectAll,
   onExportSelected,
+  onDeleteClip,
+  onDeleteProject,
+  onRegenerateClip,
 }) => {
   const [editingClip, setEditingClip] = useState<Clip | null>(null);
 
-  // Format duration for display
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins} min`;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins} min`;
   };
 
-  // Check if all filtered clips are selected
   const allSelected = filteredClips.length > 0 && filteredClips.every(c => c.isSelected);
+
+  const handleDeleteProject = () => {
+    if (window.confirm(`¿Eliminar el proyecto "${project.name}" y todos sus clips?`)) {
+      onDeleteProject?.(project.id);
+      onBack();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -78,9 +85,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4" />
-                Configurar
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={handleDeleteProject}>
+                <Trash2 className="h-4 w-4" />
+                Eliminar
               </Button>
               <Button variant="outline" size="sm">
                 <Share2 className="h-4 w-4" />
@@ -102,7 +109,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
         </div>
       </div>
 
-      {/* Content */}
       <div className="container mx-auto px-6 py-8">
         {/* Project stats */}
         <div className="glass-card rounded-xl p-6 mb-8 animate-fade-in">
@@ -136,33 +142,21 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           </div>
         </div>
 
-        {/* Filters */}
         <div className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
-          <StatusFilter
-            currentFilter={statusFilter}
-            onFilterChange={onFilterChange}
-            counts={filterCounts}
-          />
+          <StatusFilter currentFilter={statusFilter} onFilterChange={onFilterChange} counts={filterCounts} />
         </div>
 
-        {/* Bulk actions bar */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => onSelectAll(!allSelected)}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {allSelected ? (
-                <CheckSquare className="h-4 w-4 text-primary" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
+              {allSelected ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
               <span>{allSelected ? 'Deseleccionar todo' : 'Seleccionar todo'}</span>
             </button>
             {selectedClips.length > 0 && (
-              <span className="text-sm text-primary font-medium">
-                {selectedClips.length} clips seleccionados
-              </span>
+              <span className="text-sm text-primary font-medium">{selectedClips.length} clips seleccionados</span>
             )}
           </div>
           <h2 className="text-lg font-semibold text-foreground">
@@ -173,12 +167,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           </h2>
         </div>
 
-        {/* Clips grid */}
         {filteredClips.length === 0 ? (
           <div className="glass-card rounded-xl p-12 text-center">
-            <p className="text-muted-foreground">
-              No hay clips en esta categoría
-            </p>
+            <p className="text-muted-foreground">No hay clips en esta categoría</p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -190,13 +181,14 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 onEdit={setEditingClip}
                 onToggleFavorite={onToggleFavorite}
                 onToggleSelect={onToggleSelect}
+                onDelete={onDeleteClip}
+                onRegenerate={onRegenerateClip}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* Edit Dialog */}
       <EditClipDialog
         clip={editingClip}
         isOpen={!!editingClip}
