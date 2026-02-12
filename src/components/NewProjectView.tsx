@@ -20,13 +20,10 @@ interface NewProjectViewProps {
       maxClipDuration: number;
       outputFormat: VideoFormat;
     }
-  ) => void;
+  ) => Promise<void>;
 }
 
-export const NewProjectView: React.FC<NewProjectViewProps> = ({
-  onBack,
-  onCreateProject,
-}) => {
+export const NewProjectView: React.FC<NewProjectViewProps> = ({ onBack, onCreateProject }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [minDuration, setMinDuration] = useState(30);
   const [maxDuration, setMaxDuration] = useState(60);
@@ -35,31 +32,25 @@ export const NewProjectView: React.FC<NewProjectViewProps> = ({
 
   const handleGenerate = async () => {
     if (!selectedFile) return;
-
     setIsProcessing(true);
-    
+
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Mock video duration (random between 30 min and 2 hours)
+    // Mock video duration
     const mockDuration = Math.floor(Math.random() * 5400) + 1800;
 
-    onCreateProject(
-      selectedFile.name,
-      mockDuration,
-      {
-        minClipDuration: minDuration,
-        maxClipDuration: maxDuration,
-        outputFormat: format,
-      }
-    );
+    await onCreateProject(selectedFile.name, mockDuration, {
+      minClipDuration: minDuration,
+      maxClipDuration: maxDuration,
+      outputFormat: format,
+    });
 
     setIsProcessing(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
@@ -74,63 +65,35 @@ export const NewProjectView: React.FC<NewProjectViewProps> = ({
         </div>
       </div>
 
-      {/* Content */}
       <div className="container mx-auto px-6 py-8">
         <div className="max-w-3xl mx-auto space-y-8">
-          {/* Step 1: Upload */}
           <section className="animate-fade-in">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                1
-              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">1</div>
               <h2 className="text-lg font-semibold text-foreground">Sube tu video largo</h2>
             </div>
-            <VideoUploader
-              onFileSelect={setSelectedFile}
-              selectedFile={selectedFile}
-              onClear={() => setSelectedFile(null)}
-            />
+            <VideoUploader onFileSelect={setSelectedFile} selectedFile={selectedFile} onClear={() => setSelectedFile(null)} />
           </section>
 
-          {/* Step 2: Settings */}
           <section className="animate-fade-in" style={{ animationDelay: '100ms' }}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                2
-              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">2</div>
               <h2 className="text-lg font-semibold text-foreground">Configura los parámetros</h2>
             </div>
             <div className="glass-card rounded-xl p-6">
               <ClipSettings
-                minDuration={minDuration}
-                maxDuration={maxDuration}
-                format={format}
-                onMinDurationChange={setMinDuration}
-                onMaxDurationChange={setMaxDuration}
-                onFormatChange={setFormat}
+                minDuration={minDuration} maxDuration={maxDuration} format={format}
+                onMinDurationChange={setMinDuration} onMaxDurationChange={setMaxDuration} onFormatChange={setFormat}
               />
             </div>
           </section>
 
-          {/* Generate button */}
           <div className="pt-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
-            <Button
-              variant="gradient"
-              size="xl"
-              className="w-full"
-              disabled={!selectedFile || isProcessing}
-              onClick={handleGenerate}
-            >
+            <Button variant="gradient" size="xl" className="w-full" disabled={!selectedFile || isProcessing} onClick={handleGenerate}>
               {isProcessing ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Analizando video...
-                </>
+                <><Loader2 className="h-5 w-5 animate-spin" />Analizando video...</>
               ) : (
-                <>
-                  <Wand2 className="h-5 w-5" />
-                  Generar clips automáticamente
-                </>
+                <><Wand2 className="h-5 w-5" />Generar clips automáticamente</>
               )}
             </Button>
             <p className="text-center text-sm text-muted-foreground mt-3">

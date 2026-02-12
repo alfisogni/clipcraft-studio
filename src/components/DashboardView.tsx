@@ -4,29 +4,30 @@
  */
 
 import React from 'react';
-import { Folder, Plus } from 'lucide-react';
+import { Folder, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { StatsCards } from '@/components/StatsCards';
 import { ProjectCard } from '@/components/ProjectCard';
 import { Project, DashboardStats } from '@/types';
+import type { User } from '@supabase/supabase-js';
 
 interface DashboardViewProps {
   projects: Project[];
   stats: DashboardStats;
+  loading?: boolean;
+  user: User;
+  onSignOut: () => Promise<void>;
   onNewProject: () => void;
   onSelectProject: (projectId: string) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
-  projects,
-  stats,
-  onNewProject,
-  onSelectProject,
+  projects, stats, loading, user, onSignOut, onNewProject, onSelectProject,
 }) => {
   return (
     <div className="min-h-screen bg-background">
-      <Header onNewProject={onNewProject} />
+      <Header onNewProject={onNewProject} user={user} onSignOut={onSignOut} />
 
       <main className="container mx-auto px-6 py-8">
         {/* Welcome section */}
@@ -37,12 +38,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
 
-        {/* Stats */}
         <div className="mb-8">
           <StatsCards stats={stats} />
         </div>
 
-        {/* Projects section */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -51,15 +50,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {projects.length === 0 ? (
-            // Empty state
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : projects.length === 0 ? (
             <div className="glass-card rounded-xl p-12 text-center animate-fade-in">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary mx-auto mb-4">
                 <Folder className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Sin proyectos aún
-              </h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Sin proyectos aún</h3>
               <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                 Sube tu primer video largo y deja que la IA genere clips optimizados para redes sociales
               </p>
@@ -69,18 +69,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </Button>
             </div>
           ) : (
-            // Projects grid
             <div className="grid gap-4 md:grid-cols-2">
               {projects.map((project, index) => (
-                <div
-                  key={project.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <ProjectCard
-                    project={project}
-                    onClick={() => onSelectProject(project.id)}
-                  />
+                <div key={project.id} className="animate-slide-up" style={{ animationDelay: `${index * 50}ms` }}>
+                  <ProjectCard project={project} onClick={() => onSelectProject(project.id)} />
                 </div>
               ))}
             </div>
