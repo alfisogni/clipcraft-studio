@@ -20,22 +20,20 @@ interface DashboardViewProps {
   onSignOut: () => Promise<void>;
   onNewProject: () => void;
   onSelectProject: (projectId: string) => void;
+  onDeleteProject?: (projectId: string) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
-  projects, stats, loading, user, onSignOut, onNewProject, onSelectProject,
+  projects, stats, loading, user, onSignOut, onNewProject, onSelectProject, onDeleteProject,
 }) => {
   return (
     <div className="min-h-screen bg-background">
       <Header onNewProject={onNewProject} user={user} onSignOut={onSignOut} />
 
       <main className="container mx-auto px-6 py-8">
-        {/* Welcome section */}
         <div className="mb-8 animate-fade-in">
           <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-          <p className="text-muted-foreground mt-1">
-            Gestiona tus proyectos y clips de contenido
-          </p>
+          <p className="text-muted-foreground mt-1">Gestiona tus proyectos y clips de contenido</p>
         </div>
 
         <div className="mb-8">
@@ -72,7 +70,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="grid gap-4 md:grid-cols-2">
               {projects.map((project, index) => (
                 <div key={project.id} className="animate-slide-up" style={{ animationDelay: `${index * 50}ms` }}>
-                  <ProjectCard project={project} onClick={() => onSelectProject(project.id)} />
+                  <ProjectCard project={project} onClick={() => onSelectProject(project.id)} onDelete={onDeleteProject} />
                 </div>
               ))}
             </div>

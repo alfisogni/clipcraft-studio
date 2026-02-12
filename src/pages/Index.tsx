@@ -26,6 +26,7 @@ const Index: React.FC<IndexProps> = ({ user, onSignOut }) => {
     setStatusFilter, createProject, selectProject, clearSelection,
     updateClipContent, toggleClipFavorite, toggleClipSelect,
     selectAllClips, exportSelectedClips,
+    deleteProject, deleteClip, regenerateClipContent,
   } = useProjects(user);
 
   const handleNewProject = () => setCurrentView('new-project');
@@ -35,10 +36,16 @@ const Index: React.FC<IndexProps> = ({ user, onSignOut }) => {
   const handleCreateProject = async (
     videoName: string,
     videoDuration: number,
-    settings: Parameters<typeof createProject>[2]
+    settings: Parameters<typeof createProject>[2],
+    file?: File
   ) => {
-    await createProject(videoName, videoDuration, settings);
+    await createProject(videoName, videoDuration, settings, file);
     setCurrentView('project-detail');
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    await deleteProject(projectId);
+    setCurrentView('dashboard');
   };
 
   switch (currentView) {
@@ -66,6 +73,9 @@ const Index: React.FC<IndexProps> = ({ user, onSignOut }) => {
           onToggleSelect={toggleClipSelect}
           onSelectAll={selectAllClips}
           onExportSelected={exportSelectedClips}
+          onDeleteClip={deleteClip}
+          onDeleteProject={handleDeleteProject}
+          onRegenerateClip={regenerateClipContent}
         />
       );
 
@@ -79,6 +89,7 @@ const Index: React.FC<IndexProps> = ({ user, onSignOut }) => {
           onSignOut={onSignOut}
           onNewProject={handleNewProject}
           onSelectProject={handleSelectProject}
+          onDeleteProject={deleteProject}
         />
       );
   }

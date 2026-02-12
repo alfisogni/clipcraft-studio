@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Project, VideoFormat, DashboardStats, StatusFilter, Clip } from '@/types';
 import { generateMockClips } from '@/lib/mockData';
 import type { User } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 export const useProjects = (user: User | null) => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -27,7 +28,6 @@ export const useProjects = (user: User | null) => {
 
     if (error) { console.error('Error fetching projects:', error); setLoading(false); return; }
 
-    // Fetch clips for all projects
     const { data: clipRows } = await supabase
       .from('clips')
       .select('*')
@@ -120,13 +120,35 @@ export const useProjects = (user: User | null) => {
     return selectedProject.clips.filter(c => c.isSelected);
   }, [selectedProject]);
 
-  // Create project in database
+  // Create project with real video upload
   const createProject = useCallback(async (
     videoName: string,
     videoDuration: number,
-    settings: { minClipDuration: number; maxClipDuration: number; outputFormat: VideoFormat }
+    settings: { minClipDuration: number; maxClipDuration: number; outputFormat: VideoFormat },
+    file?: File
   ) => {
     if (!user) return;
+
+    let videoStoragePath: string | null = null;
+
+    // Upload video to storage if file provided
+    if (file) {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+      
+      toast.info('Subiendo video...');
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(filePath, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Error al subir el video');
+        return;
+      }
+      videoStoragePath = filePath;
+      toast.success('Video subido correctamente');
+    }
 
     // Insert project
     const projectInsert = {
@@ -135,6 +157,7 @@ export const useProjects = (user: User | null) => {
       original_video_name: videoName,
       original_video_duration: videoDuration,
       settings: JSON.parse(JSON.stringify(settings)),
+      video_storage_path: videoStoragePath,
     };
     const { data: project, error: projErr } = await supabase
       .from('projects')
@@ -144,7 +167,7 @@ export const useProjects = (user: User | null) => {
 
     if (projErr || !project) { console.error('Error creating project:', projErr); return; }
 
-    // Generate mock clips and insert them
+    // Generate clips with time segments
     const mockClips = generateMockClips(videoDuration, settings.minClipDuration, settings.maxClipDuration, settings.outputFormat);
     
     const clipInserts = mockClips.map(c => ({
@@ -161,7 +184,44 @@ export const useProjects = (user: User | null) => {
 
     await supabase.from('clips').insert(clipInserts);
 
-    // Refresh and select
+    // Now use AI to generate better titles and descriptions for each clip
+    const { data: insertedClips } = await supabase
+      .from('clips')
+      .select('*')
+      .eq('project_id', project.id)
+      .order('start_time');
+
+    if (insertedClips && insertedClips.length > 0) {
+      // Generate AI content for each clip in parallel (fire-and-forget for speed)
+      toast.info('Generando títulos con IA...');
+      const aiPromises = insertedClips.map(async (clip, index) => {
+        try {
+          const res = await supabase.functions.invoke('generate-clip-content', {
+            body: {
+              videoName: videoName,
+              clipIndex: index,
+              startTime: clip.start_time,
+              endTime: clip.end_time,
+              duration: clip.duration,
+              format: clip.format,
+            },
+          });
+          if (res.data && !res.error && res.data.title && res.data.description) {
+            await supabase.from('clips').update({
+              title: res.data.title,
+              description: res.data.description,
+            }).eq('id', clip.id);
+          }
+        } catch (e) {
+          console.warn('AI content generation failed for clip', clip.id, e);
+        }
+      });
+
+      // Wait for all AI calls, then refresh
+      await Promise.allSettled(aiPromises);
+      toast.success('Títulos generados con IA');
+    }
+
     await fetchProjects();
     
     // Select the new project
@@ -178,6 +238,7 @@ export const useProjects = (user: User | null) => {
       updatedAt: new Date(project.updated_at),
       originalVideoName: project.original_video_name,
       originalVideoDuration: project.original_video_duration,
+      videoStoragePath: project.video_storage_path,
       clips: (newClips || []).map(c => ({
         id: c.id, title: c.title, description: c.description,
         duration: c.duration, startTime: c.start_time, endTime: c.end_time,
@@ -199,6 +260,44 @@ export const useProjects = (user: User | null) => {
     setSelectedProject(null);
     setStatusFilter('all');
   }, []);
+
+  // Delete a project and its clips
+  const deleteProject = useCallback(async (projectId: string) => {
+    if (!user) return;
+
+    const project = projects.find(p => p.id === projectId);
+
+    // Delete clips first
+    await supabase.from('clips').delete().eq('project_id', projectId);
+
+    // Delete video from storage if exists
+    if (project?.videoStoragePath) {
+      await supabase.storage.from('videos').remove([project.videoStoragePath]);
+    }
+
+    // Delete project
+    const { error } = await supabase.from('projects').delete().eq('id', projectId);
+    if (error) { console.error('Error deleting project:', error); toast.error('Error al eliminar proyecto'); return; }
+
+    toast.success('Proyecto eliminado');
+    if (selectedProject?.id === projectId) {
+      setSelectedProject(null);
+    }
+    fetchProjects();
+  }, [user, projects, selectedProject, fetchProjects]);
+
+  // Delete a single clip
+  const deleteClip = useCallback(async (clipId: string) => {
+    const { error } = await supabase.from('clips').delete().eq('id', clipId);
+    if (error) { console.error('Error deleting clip:', error); toast.error('Error al eliminar clip'); return; }
+
+    toast.success('Clip eliminado');
+    setSelectedProject(prev => {
+      if (!prev) return prev;
+      return { ...prev, clips: prev.clips.filter(c => c.id !== clipId) };
+    });
+    fetchProjects();
+  }, [fetchProjects]);
 
   // Update clip content in database
   const updateClipContent = useCallback(async (clipId: string, title: string, description: string) => {
@@ -259,11 +358,59 @@ export const useProjects = (user: User | null) => {
     alert(`Exportando ${selectedClips.length} clips seleccionados...`);
   }, [selectedClips]);
 
+  // Regenerate AI content for a single clip
+  const regenerateClipContent = useCallback(async (clipId: string) => {
+    if (!selectedProject) return;
+    const clip = selectedProject.clips.find(c => c.id === clipId);
+    if (!clip) return;
+
+    toast.info('Regenerando con IA...');
+    const index = selectedProject.clips.indexOf(clip);
+
+    try {
+      const res = await supabase.functions.invoke('generate-clip-content', {
+        body: {
+          videoName: selectedProject.originalVideoName,
+          clipIndex: index,
+          startTime: clip.startTime,
+          endTime: clip.endTime,
+          duration: clip.duration,
+          format: clip.format,
+        },
+      });
+
+      if (res.data && !res.error && res.data.title && res.data.description) {
+        await supabase.from('clips').update({
+          title: res.data.title,
+          description: res.data.description,
+        }).eq('id', clipId);
+
+        setSelectedProject(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            clips: prev.clips.map(c => c.id === clipId
+              ? { ...c, title: res.data.title, description: res.data.description }
+              : c),
+          };
+        });
+        toast.success('Contenido regenerado');
+        fetchProjects();
+      } else {
+        toast.error('Error al generar contenido');
+      }
+    } catch (e) {
+      console.error('Regenerate error:', e);
+      toast.error('Error al conectar con IA');
+    }
+  }, [selectedProject, fetchProjects]);
+
   return {
     projects, selectedProject, stats, filterCounts, filteredClips,
     selectedClips, statusFilter, loading,
     setStatusFilter, createProject, selectProject, clearSelection,
     updateClipContent, toggleClipFavorite, toggleClipSelect,
     selectAllClips, exportSelectedClips,
+    deleteProject, deleteClip, regenerateClipContent,
   };
 };

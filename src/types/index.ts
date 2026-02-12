@@ -29,6 +29,7 @@ export interface Project {
   updatedAt: Date;
   originalVideoName: string;
   originalVideoDuration: number; // in seconds
+  videoStoragePath?: string | null;
   clips: Clip[];
   settings: ProjectSettings;
 }
