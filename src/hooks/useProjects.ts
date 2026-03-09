@@ -1,6 +1,6 @@
 /**
  * useProjects Hook
- * Manages project state with Lovable Cloud database
+ * Manages project state with database
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
