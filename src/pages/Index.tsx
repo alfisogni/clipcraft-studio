@@ -27,6 +27,7 @@ const Index: React.FC<IndexProps> = ({ user, onSignOut }) => {
     updateClipContent, toggleClipFavorite, toggleClipSelect,
     selectAllClips, exportSelectedClips,
     deleteProject, deleteClip, regenerateClipContent,
+    downloadClip, processClip,
   } = useProjects(user);
 
   const handleNewProject = () => setCurrentView('new-project');
