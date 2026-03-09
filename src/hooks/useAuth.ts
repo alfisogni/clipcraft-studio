@@ -1,6 +1,6 @@
 /**
  * useAuth Hook
- * Manages authentication state with Lovable Cloud
+ * Manages authentication state
  */
 
 import { useState, useEffect, useCallback } from 'react';
