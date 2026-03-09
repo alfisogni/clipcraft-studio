@@ -1,10 +1,10 @@
 /**
  * ClipCard Component
- * Displays individual clip information with status and actions
+ * Displays individual clip information with status, actions, and download
  */
 
-import React from 'react';
-import { Clock, Play, Copy, Download, Edit2, Star, Check, Trash2, Wand2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Play, Download, Edit2, Star, Check, Trash2, Wand2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clip } from '@/types';
@@ -18,6 +18,8 @@ interface ClipCardProps {
   onToggleSelect?: (clipId: string) => void;
   onDelete?: (clipId: string) => void;
   onRegenerate?: (clipId: string) => void;
+  onDownload?: (clip: Clip) => void;
+  onProcess?: (clip: Clip) => void;
 }
 
 export const ClipCard: React.FC<ClipCardProps> = ({ 
@@ -28,7 +30,11 @@ export const ClipCard: React.FC<ClipCardProps> = ({
   onToggleSelect,
   onDelete,
   onRegenerate,
+  onDownload,
+  onProcess,
 }) => {
+  const [downloading, setDownloading] = useState(false);
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -48,6 +54,16 @@ export const ClipCard: React.FC<ClipCardProps> = ({
       case 'ready': return 'Listo';
       case 'processing': return 'Procesando';
       default: return 'Pendiente';
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!onDownload) return;
+    setDownloading(true);
+    try {
+      await onDownload(clip);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -122,10 +138,18 @@ export const ClipCard: React.FC<ClipCardProps> = ({
         </div>
 
         <div className="flex items-center gap-1 pt-2 border-t border-border/50">
-          <Button variant="ghost" size="sm" className="flex-1 text-xs">
-            <Play className="h-3.5 w-3.5" />
-            Preview
-          </Button>
+          {clip.status === 'pending' && onProcess && (
+            <Button variant="ghost" size="sm" className="flex-1 text-xs" onClick={() => onProcess(clip)}>
+              <Play className="h-3.5 w-3.5" />
+              Procesar
+            </Button>
+          )}
+          {clip.status === 'processing' && (
+            <Button variant="ghost" size="sm" className="flex-1 text-xs" disabled>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Procesando
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="sm" 
@@ -153,8 +177,15 @@ export const ClipCard: React.FC<ClipCardProps> = ({
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
           {clip.status === 'ready' && (
-            <Button variant="ghost" size="sm" className="flex-1 text-xs text-success">
-              <Download className="h-3.5 w-3.5" />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 text-xs text-success"
+              onClick={handleDownload}
+              disabled={downloading}
+            >
+              {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              Descargar
             </Button>
           )}
         </div>
