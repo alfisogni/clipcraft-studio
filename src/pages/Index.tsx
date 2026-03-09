@@ -77,6 +77,8 @@ const Index: React.FC<IndexProps> = ({ user, onSignOut }) => {
           onDeleteClip={deleteClip}
           onDeleteProject={handleDeleteProject}
           onRegenerateClip={regenerateClipContent}
+          onDownloadClip={downloadClip}
+          onProcessClip={processClip}
         />
       );
 
