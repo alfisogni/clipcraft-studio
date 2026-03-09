@@ -192,7 +192,6 @@ export const useProjects = (user: User | null) => {
       .order('start_time');
 
     if (insertedClips && insertedClips.length > 0) {
-      // Generate AI content for each clip in parallel (fire-and-forget for speed)
       toast.info('Generando títulos con IA...');
       const aiPromises = insertedClips.map(async (clip, index) => {
         try {
@@ -217,7 +216,6 @@ export const useProjects = (user: User | null) => {
         }
       });
 
-      // Wait for all AI calls, then refresh
       await Promise.allSettled(aiPromises);
       toast.success('Títulos generados con IA');
     }
@@ -355,8 +353,100 @@ export const useProjects = (user: User | null) => {
   const exportSelectedClips = useCallback(() => {
     if (selectedClips.length === 0) return;
     console.log('Exporting clips:', selectedClips.map(c => c.title));
-    alert(`Exportando ${selectedClips.length} clips seleccionados...`);
+    toast.info(`Exportando ${selectedClips.length} clips seleccionados...`);
   }, [selectedClips]);
+
+  // Download a clip (generates signed URL for the original video segment)
+  const downloadClip = useCallback(async (clip: Clip) => {
+    if (!selectedProject?.videoStoragePath) {
+      toast.error('No hay video almacenado para este proyecto');
+      return;
+    }
+
+    try {
+      // For now, download the original video file
+      // When Cloudinary is integrated, this will download the processed clip
+      const { data, error } = await supabase.storage
+        .from('videos')
+        .createSignedUrl(selectedProject.videoStoragePath, 3600);
+
+      if (error || !data?.signedUrl) {
+        toast.error('Error al generar enlace de descarga');
+        return;
+      }
+
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = data.signedUrl;
+      link.download = `${clip.title.replace(/[^a-zA-Z0-9]/g, '_')}.mp4`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Descarga iniciada');
+    } catch (e) {
+      console.error('Download error:', e);
+      toast.error('Error al descargar el clip');
+    }
+  }, [selectedProject]);
+
+  // Process a clip via Cloudinary edge function
+  const processClip = useCallback(async (clip: Clip) => {
+    if (!selectedProject?.videoStoragePath) {
+      toast.error('No hay video almacenado para este proyecto');
+      return;
+    }
+
+    // Update local state immediately
+    setSelectedProject(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        clips: prev.clips.map(c => c.id === clip.id ? { ...c, status: 'processing' as const } : c),
+      };
+    });
+
+    toast.info('Enviando clip a procesar...');
+
+    try {
+      const res = await supabase.functions.invoke('process-video', {
+        body: {
+          clipId: clip.id,
+          projectId: selectedProject.id,
+          videoStoragePath: selectedProject.videoStoragePath,
+          startTime: clip.startTime,
+          endTime: clip.endTime,
+          format: clip.format,
+        },
+      });
+
+      if (res.error) {
+        toast.error('Error al procesar clip: ' + (res.error.message || 'Error desconocido'));
+        setSelectedProject(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            clips: prev.clips.map(c => c.id === clip.id ? { ...c, status: 'pending' as const } : c),
+          };
+        });
+        return;
+      }
+
+      toast.success('Clip enviado a procesar. Se actualizará cuando esté listo.');
+      fetchProjects();
+    } catch (e) {
+      console.error('Process error:', e);
+      toast.error('Error al conectar con el servicio de procesamiento');
+      setSelectedProject(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          clips: prev.clips.map(c => c.id === clip.id ? { ...c, status: 'pending' as const } : c),
+        };
+      });
+    }
+  }, [selectedProject, fetchProjects]);
 
   // Regenerate AI content for a single clip
   const regenerateClipContent = useCallback(async (clipId: string) => {
@@ -412,5 +502,6 @@ export const useProjects = (user: User | null) => {
     updateClipContent, toggleClipFavorite, toggleClipSelect,
     selectAllClips, exportSelectedClips,
     deleteProject, deleteClip, regenerateClipContent,
+    downloadClip, processClip,
   };
 };

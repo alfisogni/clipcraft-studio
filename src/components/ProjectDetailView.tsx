@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowLeft, Film, Clock, Settings, Download, Share2, CheckSquare, Square, Trash2 } from 'lucide-react';
+import { ArrowLeft, Film, Clock, Download, Share2, CheckSquare, Square, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ClipCard } from '@/components/ClipCard';
@@ -34,6 +34,8 @@ interface ProjectDetailViewProps {
   onDeleteClip?: (clipId: string) => void;
   onDeleteProject?: (projectId: string) => void;
   onRegenerateClip?: (clipId: string) => void;
+  onDownloadClip?: (clip: Clip) => Promise<void>;
+  onProcessClip?: (clip: Clip) => void;
 }
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
@@ -52,6 +54,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   onDeleteClip,
   onDeleteProject,
   onRegenerateClip,
+  onDownloadClip,
+  onProcessClip,
 }) => {
   const [editingClip, setEditingClip] = useState<Clip | null>(null);
 
@@ -183,6 +187,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 onToggleSelect={onToggleSelect}
                 onDelete={onDeleteClip}
                 onRegenerate={onRegenerateClip}
+                onDownload={onDownloadClip}
+                onProcess={onProcessClip}
               />
             ))}
           </div>
