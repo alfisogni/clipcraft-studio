@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ClipCard } from '@/components/ClipCard';
 import { EditClipDialog } from '@/components/EditClipDialog';
+import { VideoPreviewDialog } from '@/components/VideoPreviewDialog';
 import { StatusFilter } from '@/components/StatusFilter';
 import { Project, Clip, StatusFilter as FilterType } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectDetailViewProps {
   project: Project;
