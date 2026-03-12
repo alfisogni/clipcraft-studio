@@ -33,6 +33,7 @@ export const ClipCard: React.FC<ClipCardProps> = ({
   onRegenerate,
   onDownload,
   onProcess,
+  onPreview,
 }) => {
   const [downloading, setDownloading] = useState(false);
 
