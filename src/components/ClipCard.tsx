@@ -20,6 +20,7 @@ interface ClipCardProps {
   onRegenerate?: (clipId: string) => void;
   onDownload?: (clip: Clip) => void;
   onProcess?: (clip: Clip) => void;
+  onPreview?: (clip: Clip) => void;
 }
 
 export const ClipCard: React.FC<ClipCardProps> = ({ 
