@@ -17,7 +17,8 @@ const Auth: React.FC = () => {
 
 
 
-  const handleEmailAuth = async () => {
+  const handleEmailAuth = async (e?: React.FormEvent) => {
+    if (e && 'preventDefault' in e) e.preventDefault();
     setLoading(true);
     setError(null);
     try {
@@ -26,8 +27,10 @@ const Auth: React.FC = () => {
       } else {
         await signUpWithEmail(email, password);
       }
-    } catch (err) {
-      setError(mode === 'login' ? 'Error al iniciar sesión con email.' : 'Error al registrarse.');
+    } catch (err: any) {
+      const message = err?.message || (mode === 'login' ? 'Error al iniciar sesión con email.' : 'Error al registrarse.');
+      setError(message);
+    } finally {
       setLoading(false);
     }
   };
@@ -80,25 +83,25 @@ const Auth: React.FC = () => {
 
 
           {/* Email / Password form */}
-          <div className="space-y-2">
+          <form onSubmit={handleEmailAuth} className="space-y-2">
             <input
               type="email"
               placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full px-3 py-2 border rounded-md text-foreground"
             />
             <input
               type="password"
               placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full px-3 py-2 border rounded-md text-foreground"
             />
-            <Button className="w-full" onClick={handleEmailAuth} disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Procesando...' : mode === 'login' ? 'Iniciar con email' : 'Crear cuenta'}
             </Button>
-          </div>
+          </form>
 
           {error && (
             <p className="text-destructive text-sm text-center">{error}</p>
