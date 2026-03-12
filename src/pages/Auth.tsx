@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from 'react';
-import { Loader2, Sparkles, Video, Zap } from 'lucide-react';
+import { Scissors, Loader2, Sparkles, Video, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -38,7 +38,9 @@ const Auth: React.FC = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/10 via-background to-accent/10 items-center justify-center p-12">
         <div className="max-w-md space-y-8">
           <div className="flex items-center gap-3">
-            <img src="/LogoClipFLow.png" alt="Clip Flow Studio" className="h-12 w-auto" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[hsl(199,89%,48%)] shadow-lg">
+              <Scissors className="h-6 w-6 text-primary-foreground" />
+            </div>
             <h2 className="text-3xl font-bold gradient-text">Clip Flow Studio</h2>
           </div>
 
@@ -59,7 +61,9 @@ const Auth: React.FC = () => {
         <div className="w-full max-w-sm space-y-8 animate-fade-in">
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center">
-            <img src="/LogoClipFLow.png" alt="Clip Flow Studio" className="h-14 w-auto" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[hsl(199,89%,48%)] shadow-lg">
+              <Scissors className="h-7 w-7 text-primary-foreground" />
+            </div>
           </div>
 
           <div className="text-center lg:text-left">

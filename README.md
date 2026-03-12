@@ -27,7 +27,7 @@ Una herramienta para crear clips virales de videos largos, optimizados para rede
 - **Frontend**: React + TypeScript + Vite
 - **UI**: Tailwind CSS + shadcn/ui
 - **Backend**: Supabase (Auth + Database)
-- **IA**: OpenAI / Lovable AI Gateway
+- **IA**: OpenAI (opcional, con fallback mock gratuito)
 - **Deploy**: Vercel
 
 ## 📦 Instalación
