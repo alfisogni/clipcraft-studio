@@ -214,6 +214,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 onRegenerate={onRegenerateClip}
                 onDownload={onDownloadClip}
                 onProcess={onProcessClip}
+                onPreview={handlePreview}
               />
             ))}
           </div>
@@ -225,6 +226,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
         isOpen={!!editingClip}
         onClose={() => setEditingClip(null)}
         onSave={onUpdateClip}
+      />
+
+      <VideoPreviewDialog
+        clip={previewClip}
+        videoUrl={previewUrl}
+        isOpen={!!previewClip}
+        onClose={() => { setPreviewClip(null); setPreviewUrl(null); }}
+        onDownload={onDownloadClip}
+        loading={previewLoading}
       />
     </div>
   );
