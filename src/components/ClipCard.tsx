@@ -20,6 +20,7 @@ interface ClipCardProps {
   onRegenerate?: (clipId: string) => void;
   onDownload?: (clip: Clip) => void;
   onProcess?: (clip: Clip) => void;
+  onPreview?: (clip: Clip) => void;
 }
 
 export const ClipCard: React.FC<ClipCardProps> = ({ 
@@ -32,6 +33,7 @@ export const ClipCard: React.FC<ClipCardProps> = ({
   onRegenerate,
   onDownload,
   onProcess,
+  onPreview,
 }) => {
   const [downloading, setDownloading] = useState(false);
 
@@ -138,6 +140,10 @@ export const ClipCard: React.FC<ClipCardProps> = ({
         </div>
 
         <div className="flex items-center gap-1 pt-2 border-t border-border/50">
+          <Button variant="ghost" size="sm" className="flex-1 text-xs" onClick={() => onPreview?.(clip)}>
+            <Play className="h-3.5 w-3.5" />
+            Preview
+          </Button>
           {clip.status === 'pending' && onProcess && (
             <Button variant="ghost" size="sm" className="flex-1 text-xs" onClick={() => onProcess(clip)}>
               <Play className="h-3.5 w-3.5" />

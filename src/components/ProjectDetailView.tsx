@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ClipCard } from '@/components/ClipCard';
 import { EditClipDialog } from '@/components/EditClipDialog';
+import { VideoPreviewDialog } from '@/components/VideoPreviewDialog';
 import { StatusFilter } from '@/components/StatusFilter';
 import { Project, Clip, StatusFilter as FilterType } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectDetailViewProps {
   project: Project;
@@ -58,6 +60,29 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   onProcessClip,
 }) => {
   const [editingClip, setEditingClip] = useState<Clip | null>(null);
+  const [previewClip, setPreviewClip] = useState<Clip | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const handlePreview = async (clip: Clip) => {
+    setPreviewClip(clip);
+    setPreviewLoading(true);
+    setPreviewUrl(null);
+
+    if (project.videoStoragePath) {
+      try {
+        const { data, error } = await supabase.storage
+          .from('videos')
+          .createSignedUrl(project.videoStoragePath, 3600);
+        if (!error && data?.signedUrl) {
+          setPreviewUrl(data.signedUrl);
+        }
+      } catch (e) {
+        console.error('Preview URL error:', e);
+      }
+    }
+    setPreviewLoading(false);
+  };
 
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -189,6 +214,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 onRegenerate={onRegenerateClip}
                 onDownload={onDownloadClip}
                 onProcess={onProcessClip}
+                onPreview={handlePreview}
               />
             ))}
           </div>
@@ -200,6 +226,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
         isOpen={!!editingClip}
         onClose={() => setEditingClip(null)}
         onSave={onUpdateClip}
+      />
+
+      <VideoPreviewDialog
+        clip={previewClip}
+        videoUrl={previewUrl}
+        isOpen={!!previewClip}
+        onClose={() => { setPreviewClip(null); setPreviewUrl(null); }}
+        onDownload={onDownloadClip}
+        loading={previewLoading}
       />
     </div>
   );
