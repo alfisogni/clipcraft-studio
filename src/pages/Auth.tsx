@@ -3,29 +3,31 @@
  */
 
 import React, { useState } from 'react';
-import { Scissors, Loader2, Sparkles, Video, Zap } from 'lucide-react';
+import { Loader2, Sparkles, Video, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
-interface AuthPageProps {
-  onSignIn: () => Promise<void>;
-}
-
-const Auth: React.FC<AuthPageProps> = ({ onSignIn }) => {
+const Auth: React.FC = () => {
+  const { signInWithEmail, signUpWithEmail } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleAuth = async () => {
+
+
+  const handleEmailAuth = async () => {
     setLoading(true);
     setError(null);
     try {
-      await onSignIn();
+      if (mode === 'login') {
+        await signInWithEmail(email, password);
+      } else {
+        await signUpWithEmail(email, password);
+      }
     } catch (err) {
-      setError(
-        mode === 'login'
-          ? 'Error al iniciar sesión. Intenta de nuevo.'
-          : 'Error al crear la cuenta. Intenta de nuevo.'
-      );
+      setError(mode === 'login' ? 'Error al iniciar sesión con email.' : 'Error al registrarse.');
       setLoading(false);
     }
   };
@@ -36,10 +38,8 @@ const Auth: React.FC<AuthPageProps> = ({ onSignIn }) => {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/10 via-background to-accent/10 items-center justify-center p-12">
         <div className="max-w-md space-y-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[hsl(199,89%,48%)] shadow-lg">
-              <Scissors className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <h2 className="text-3xl font-bold gradient-text">ClipFlow</h2>
+            <img src="/LogoClipFLow.png" alt="Clip Flow Studio" className="h-12 w-auto" />
+            <h2 className="text-3xl font-bold gradient-text">Clip Flow Studio</h2>
           </div>
 
           <p className="text-lg text-muted-foreground leading-relaxed">
@@ -59,9 +59,7 @@ const Auth: React.FC<AuthPageProps> = ({ onSignIn }) => {
         <div className="w-full max-w-sm space-y-8 animate-fade-in">
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[hsl(199,89%,48%)] shadow-lg">
-              <Scissors className="h-7 w-7 text-primary-foreground" />
-            </div>
+            <img src="/LogoClipFLow.png" alt="Clip Flow Studio" className="h-14 w-auto" />
           </div>
 
           <div className="text-center lg:text-left">
@@ -75,25 +73,28 @@ const Auth: React.FC<AuthPageProps> = ({ onSignIn }) => {
             </p>
           </div>
 
-          {/* Google Auth Button */}
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full gap-3 h-12"
-            onClick={handleAuth}
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <GoogleIcon />
-            )}
-            {loading
-              ? 'Conectando...'
-              : mode === 'login'
-                ? 'Iniciar sesión con Google'
-                : 'Registrarse con Google'}
-          </Button>
+
+
+          {/* Email / Password form */}
+          <div className="space-y-2">
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+            />
+            <Button className="w-full" onClick={handleEmailAuth} disabled={loading}>
+              {loading ? 'Procesando...' : mode === 'login' ? 'Iniciar con email' : 'Crear cuenta'}
+            </Button>
+          </div>
 
           {error && (
             <p className="text-destructive text-sm text-center">{error}</p>

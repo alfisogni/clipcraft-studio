@@ -10,47 +10,39 @@ serve(async (req) => {
 
   try {
     const { videoName, clipIndex, startTime, endTime, duration, format } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    let response: Response;
+
+    const messages = [
+      {
+        role: "system",
+        content: `You are a social media content expert. Generate a catchy title and engaging description for a video clip extracted from a longer video. The title should be attention-grabbing with an emoji, and the description should be optimized for social media engagement with relevant hashtags. Always respond in Spanish. Return ONLY valid JSON with "title" and "description" fields, no markdown.`,
+      },
+      {
+        role: "user",
+        content: `Generate a title and description for clip #${clipIndex + 1} from the video "${videoName}". The clip is ${duration} seconds long (from ${Math.floor(startTime / 60)}:${(startTime % 60).toString().padStart(2, '0')} to ${Math.floor(endTime / 60)}:${(endTime % 60).toString().padStart(2, '0')}), format: ${format === 'vertical' ? '9:16 vertical (Reels/TikTok/Shorts)' : '16:9 horizontal (YouTube)'}. Make the title unique and creative.`,
+      },
+    ];
+
+    // If no OpenAI key, return mock data (free tier)
+    if (!OPENAI_API_KEY) {
+      const mockData = {
+        title: `🎬 Clip ${clipIndex + 1}: ${videoName.substring(0, 30)}`,
+        description: `✨ Descubre este increíble momento del video. Duración: ${duration}s | Formato: ${format === 'vertical' ? 'Vertical 9:16' : 'Horizontal 16:9'} #viral #contenido #clips #video`,
+      };
+      return new Response(JSON.stringify(mockData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `You are a social media content expert. Generate a catchy title and engaging description for a video clip extracted from a longer video. The title should be attention-grabbing with an emoji, and the description should be optimized for social media engagement with relevant hashtags. Always respond in Spanish. Return ONLY valid JSON with "title" and "description" fields, no markdown.`,
-          },
-          {
-            role: "user",
-            content: `Generate a title and description for clip #${clipIndex + 1} from the video "${videoName}". The clip is ${duration} seconds long (from ${Math.floor(startTime / 60)}:${(startTime % 60).toString().padStart(2, '0')} to ${Math.floor(endTime / 60)}:${(endTime % 60).toString().padStart(2, '0')}), format: ${format === 'vertical' ? '9:16 vertical (Reels/TikTok/Shorts)' : '16:9 horizontal (YouTube)'}. Make the title unique and creative.`,
-          },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_content",
-              description: "Generate a title and description for a video clip",
-              parameters: {
-                type: "object",
-                properties: {
-                  title: { type: "string", description: "Catchy clip title with emoji, max 60 chars" },
-                  description: { type: "string", description: "Social media optimized description with hashtags, max 300 chars" },
-                },
-                required: ["title", "description"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "generate_content" } },
-      }),
+      body: JSON.stringify({ model: "gpt-4o-mini", messages }),
     });
 
     if (!response.ok) {
@@ -70,16 +62,8 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    
-    if (toolCall?.function?.arguments) {
-      const content = JSON.parse(toolCall.function.arguments);
-      return new Response(JSON.stringify(content), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
-    // Fallback: try parsing from message content
+    // Parse OpenAI response
     const messageContent = data.choices?.[0]?.message?.content;
     if (messageContent) {
       try {

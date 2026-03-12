@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Scissors, Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { User } from '@supabase/supabase-js';
@@ -26,11 +26,11 @@ export const Header: React.FC<HeaderProps> = ({ onNewProject, showNewButton = tr
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[hsl(199,89%,48%)] shadow-lg">
-              <Scissors className="h-5 w-5 text-primary-foreground" />
+            <div className="h-10 flex items-center">
+              <img src="/LogoClipFLow.png" alt="Clip Flow Studio" className="max-h-10 w-auto object-contain" />
             </div>
             <div>
-              <h1 className="text-xl font-bold gradient-text">ClipFlow</h1>
+              <h1 className="text-xl font-bold gradient-text">Clip Flow Studio</h1>
               <p className="text-xs text-muted-foreground">Video Creator Tool</p>
             </div>
           </div>

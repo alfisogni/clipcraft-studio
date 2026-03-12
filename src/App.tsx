@@ -23,7 +23,7 @@ const AppContent = () => {
   }
 
   if (!user) {
-    return <Auth onSignIn={signInWithGoogle} />;
+    return <Auth />;
   }
 
   return (
