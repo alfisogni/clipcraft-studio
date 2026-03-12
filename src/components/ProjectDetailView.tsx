@@ -60,6 +60,29 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   onProcessClip,
 }) => {
   const [editingClip, setEditingClip] = useState<Clip | null>(null);
+  const [previewClip, setPreviewClip] = useState<Clip | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const handlePreview = async (clip: Clip) => {
+    setPreviewClip(clip);
+    setPreviewLoading(true);
+    setPreviewUrl(null);
+
+    if (project.videoStoragePath) {
+      try {
+        const { data, error } = await supabase.storage
+          .from('videos')
+          .createSignedUrl(project.videoStoragePath, 3600);
+        if (!error && data?.signedUrl) {
+          setPreviewUrl(data.signedUrl);
+        }
+      } catch (e) {
+        console.error('Preview URL error:', e);
+      }
+    }
+    setPreviewLoading(false);
+  };
 
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
