@@ -1,18 +1,40 @@
 /**
  * useAuth Hook
- * Manages authentication state
+ * Manages authentication state with demo mode support
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useDemo, DEMO_EMAIL, DEMO_PASSWORD } from '@/contexts/DemoContext';
 import type { User } from '@supabase/supabase-js';
+
+// Fake user object for demo mode
+const DEMO_USER: User = {
+  id: 'demo-user-id',
+  aud: 'authenticated',
+  role: 'authenticated',
+  email: DEMO_EMAIL,
+  email_confirmed_at: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  app_metadata: {},
+  user_metadata: { full_name: 'Usuario Demo', avatar_url: '' },
+  identities: [],
+  factors: [],
+} as unknown as User;
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isDemo, enterDemo, exitDemo } = useDemo();
 
   useEffect(() => {
-    // Listen for auth changes FIRST
+    if (isDemo) {
+      setUser(DEMO_USER);
+      setLoading(false);
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
@@ -20,25 +42,25 @@ export const useAuth = () => {
       }
     );
 
-    // Then check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isDemo]);
 
-  const signInWithGoogle = useCallback(async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) {
-      console.error('Google sign-in error:', error);
-      throw error;
+  const signInWithEmail = useCallback(async (email: string, password: string) => {
+    // Check for demo credentials
+    if (email.toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      enterDemo();
+      return { user: DEMO_USER, session: null } as any;
     }
-  }, []);
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
+  }, [enterDemo]);
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
@@ -50,18 +72,14 @@ export const useAuth = () => {
     return data;
   }, []);
 
-  const signInWithEmail = useCallback(async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
-    return data;
-  }, []);
-
   const signOut = useCallback(async () => {
+    if (isDemo) {
+      exitDemo();
+      setUser(null);
+      return;
+    }
     await supabase.auth.signOut();
-  }, []);
+  }, [isDemo, exitDemo]);
 
-  return { user, loading, signInWithEmail, signUpWithEmail, signOut };
+  return { user, loading, isDemo, signInWithEmail, signUpWithEmail, signOut };
 };
