@@ -84,6 +84,7 @@ const Auth: React.FC = () => {
 
           {/* Email / Password form */}
           <form onSubmit={handleEmailAuth} className="space-y-3">
+            <div className="text-[11px] text-muted-foreground/60">Usar email de prueba: <span className="font-mono">demo@clipflow.com</span></div>
             <input
               type="email"
               placeholder="Correo electrónico"
@@ -91,6 +92,7 @@ const Auth: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
+            <div className="text-[11px] text-muted-foreground/60">Contraseña de prueba: <span className="font-mono">Demo123</span></div>
             <input
               type="password"
               placeholder="Contraseña"
