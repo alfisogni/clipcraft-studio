@@ -4,9 +4,11 @@
  */
 
 import React from 'react';
-import { Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut, Scissors } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useDemo } from '@/contexts/DemoContext';
 import type { User } from '@supabase/supabase-js';
 
 interface HeaderProps {
@@ -19,6 +21,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onNewProject, showNewButton = true, user, onSignOut }) => {
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
   const avatarUrl = user?.user_metadata?.avatar_url;
+  const { isDemo } = useDemo();
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-xl sticky top-0 z-50">
@@ -26,11 +29,18 @@ export const Header: React.FC<HeaderProps> = ({ onNewProject, showNewButton = tr
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="h-10 flex items-center">
-              <img src="/LogoClipFLow.png" alt="Clip Flow Studio" className="max-h-10 w-auto object-contain" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[hsl(199,89%,48%)] shadow-lg">
+              <Scissors className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold gradient-text">Clip Flow Studio</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold gradient-text">Clip Flow Studio</h1>
+                {isDemo && (
+                  <Badge variant="outline" className="border-amber-500/50 bg-amber-500/10 text-amber-600 text-[10px] px-1.5 py-0 font-semibold animate-pulse">
+                    DEMO
+                  </Badge>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">Video Creator Tool</p>
             </div>
           </div>
