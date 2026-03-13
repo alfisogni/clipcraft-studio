@@ -132,6 +132,17 @@ const Auth: React.FC = () => {
             )}
           </div>
 
+          {/* Demo access hint */}
+          <div className="bg-muted/50 border border-border rounded-lg p-3 text-center space-y-1">
+            <p className="text-xs font-medium text-foreground">🎯 Acceso Demo</p>
+            <p className="text-xs text-muted-foreground">
+              Email: <span className="font-mono text-foreground">demo@clipflow.com</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Password: <span className="font-mono text-foreground">Demo123</span>
+            </p>
+          </div>
+
           <p className="text-xs text-muted-foreground text-center">
             Al continuar, aceptas nuestros términos de servicio y política de privacidad
           </p>
