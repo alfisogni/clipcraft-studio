@@ -83,20 +83,20 @@ const Auth: React.FC = () => {
 
 
           {/* Email / Password form */}
-          <form onSubmit={handleEmailAuth} className="space-y-2">
+          <form onSubmit={handleEmailAuth} className="space-y-3">
             <input
               type="email"
               placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-foreground"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
             <input
               type="password"
               placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-foreground"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Procesando...' : mode === 'login' ? 'Iniciar con email' : 'Crear cuenta'}
@@ -132,16 +132,14 @@ const Auth: React.FC = () => {
             )}
           </div>
 
-          {/* Demo access hint */}
-          <div className="bg-muted/50 border border-border rounded-lg p-3 text-center space-y-1">
-            <p className="text-xs font-medium text-foreground">🎯 Acceso Demo</p>
-            <p className="text-xs text-muted-foreground">
-              Email: <span className="font-mono text-foreground">demo@clipflow.com</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Password: <span className="font-mono text-foreground">Demo123</span>
-            </p>
-          </div>
+          {/* Demo hint - subtle */}
+          <button
+            type="button"
+            onClick={() => { setEmail('demo@clipflow.com'); setPassword('Demo123'); }}
+            className="w-full text-center text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-pointer"
+          >
+            ¿Solo querés probar? Usá <span className="font-mono">demo@clipflow.com</span> / <span className="font-mono">Demo123</span>
+          </button>
 
           <p className="text-xs text-muted-foreground text-center">
             Al continuar, aceptas nuestros términos de servicio y política de privacidad
