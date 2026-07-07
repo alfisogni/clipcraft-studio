@@ -4,16 +4,16 @@ Herramienta open source para crear clips virales a partir de videos largos, opti
 
 ![ClipCraft Studio](public/LogoClipFLow.png)
 
-## ✨ Características
+## Características
 
-- 🎬 Sube videos y genera clips automáticamente
-- 🤖 Títulos y descripciones sugeridos por IA
-- 📱 Formatos optimizados para Reels, TikTok, Shorts y YouTube
-- 🔐 Autenticación por email/contraseña con Supabase Auth
-- ☁️ Backend serverless con Supabase (DB + Edge Functions)
-- 🎭 Modo demo sin necesidad de cuenta
+- Sube videos y genera clips automáticamente
+- Títulos y descripciones sugeridos por IA
+- Formatos optimizados para Reels, TikTok, Shorts y YouTube
+- Autenticación por email/contraseña con Supabase Auth
+- Backend serverless con Supabase (DB + Edge Functions)
+- Modo demo sin necesidad de cuenta
 
-## 🛠️ Stack
+## Stack
 
 | Capa | Tecnología |
 |------|-----------|
@@ -23,13 +23,7 @@ Herramienta open source para crear clips virales a partir de videos largos, opti
 | Tests | Vitest |
 | Deploy | Vercel |
 
-## 💰 Costo para empezar: $0
-
-- ✅ Supabase Free Tier (50 000 usuarios activos/mes)
-- ✅ Vercel Free Tier (hosting ilimitado)
-- ✅ IA con datos mock incluidos (OpenAI es opcional)
-
-## 📦 Instalación local
+## Instalación local
 
 ```bash
 # 1. Clonar el repositorio
@@ -47,7 +41,7 @@ cp .env.example .env
 npm run dev
 ```
 
-## ⚙️ Configuración
+## Configuración
 
 ### Variables de entorno
 
@@ -62,9 +56,7 @@ VITE_SUPABASE_ANON_KEY=tu_anon_key
 # OPENAI_API_KEY=sk-...
 ```
 
-Obtén tus keys en [supabase.com](https://supabase.com) → tu proyecto → **Settings → API**.
-
-> ⚠️ **Nunca comitees el archivo `.env`**. Ya está en `.gitignore`.
+> **Nunca comitees el archivo `.env`**. Ya está en `.gitignore`.
 
 ### Base de datos
 
@@ -74,7 +66,7 @@ Aplica las migraciones incluidas desde el dashboard de Supabase o con la CLI:
 supabase db push
 ```
 
-## 🚀 Scripts disponibles
+## Scripts disponibles
 
 ```bash
 npm run dev       # Servidor de desarrollo
@@ -83,13 +75,13 @@ npm run preview   # Previsualizar el build
 npm run test      # Ejecutar tests con Vitest
 ```
 
-## 🌐 Deploy en Vercel
+## Deploy en Vercel
 
 1. Importa el repositorio en [vercel.com](https://vercel.com)
 2. Agrega las variables de entorno en **Settings → Environment Variables**
 3. Vercel detecta Vite automáticamente — sin configuración extra
 
-## 📁 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 clipcraft-studio/
@@ -110,13 +102,13 @@ clipcraft-studio/
 └── ...
 ```
 
-## 🔐 Seguridad
+## Seguridad
 
 - Las variables de entorno del frontend (`VITE_*`) son públicas por diseño de Vite/Supabase — están protegidas por las **Row Level Security (RLS)** policies de la base de datos.
 - Los secretos del servidor (OpenAI, etc.) se manejan como **Supabase Secrets** en las Edge Functions y nunca se exponen al cliente.
 - Revisa las policies de RLS en las migraciones antes de hacer deploy a producción.
 
-## 🤝 Contribuir
+## Contribuir
 
 Las contribuciones son bienvenidas.
 
@@ -126,15 +118,11 @@ Las contribuciones son bienvenidas.
 4. Push: `git push origin feature/mi-feature`
 5. Abre un Pull Request
 
-## 📝 Licencia
+## Licencia
 
 MIT — ver [LICENSE](./LICENSE) para más detalles.
 
-## 👤 Autor
+## Autor
 
 **Luca Fisogni** ([@alfisogni](https://github.com/alfisogni))
-
----
-
-Hecho con ❤️ para creadores de contenido
 
