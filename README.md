@@ -75,12 +75,6 @@ npm run preview   # Previsualizar el build
 npm run test      # Ejecutar tests con Vitest
 ```
 
-## Deploy en Vercel
-
-1. Importa el repositorio en [vercel.com](https://vercel.com)
-2. Agrega las variables de entorno en **Settings → Environment Variables**
-3. Vercel detecta Vite automáticamente — sin configuración extra
-
 ## Estructura del proyecto
 
 ```
@@ -106,7 +100,6 @@ clipcraft-studio/
 
 - Las variables de entorno del frontend (`VITE_*`) son públicas por diseño de Vite/Supabase — están protegidas por las **Row Level Security (RLS)** policies de la base de datos.
 - Los secretos del servidor (OpenAI, etc.) se manejan como **Supabase Secrets** en las Edge Functions y nunca se exponen al cliente.
-- Revisa las policies de RLS en las migraciones antes de hacer deploy a producción.
 
 ## Contribuir
 
