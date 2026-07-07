@@ -1,139 +1,138 @@
-# Clip Flow Studio
+# ClipCraft Studio
 
-Una herramienta para crear clips virales de videos largos, optimizados para redes sociales con IA.
+Herramienta open source para crear clips virales a partir de videos largos, optimizados para redes sociales con ayuda de IA.
 
-![Clip Flow Studio](public/LogoClipFLow.png)
+![ClipCraft Studio](public/LogoClipFLow.png)
 
-## 💰 100% GRATUITO
+## ✨ Características
 
-⚠️ **Este proyecto NO requiere pagar nada:**
-- ✅ Supabase (Free Tier): 50,000 usuarios
-- ✅ Vercel (Free Tier): Hosting ilimitado
-- ✅ Google OAuth: Gratis
-- ✅ IA para títulos: Mock data automático (sin necesidad de OpenAI)
-
-**Total para empezar: $0** 🎉
-
-## 🚀 Características
-
-- ✨ Sube videos y genera clips automáticamente
-- 🤖 Títulos y descripciones generados con IA
+- 🎬 Sube videos y genera clips automáticamente
+- 🤖 Títulos y descripciones sugeridos por IA
 - 📱 Formatos optimizados para Reels, TikTok, Shorts y YouTube
-- 🔐 Autenticación con Google OAuth y email/contraseña
-- ☁️ Backend con Supabase
+- 🔐 Autenticación por email/contraseña con Supabase Auth
+- ☁️ Backend serverless con Supabase (DB + Edge Functions)
+- 🎭 Modo demo sin necesidad de cuenta
 
-## 🛠️ Tecnologías
+## 🛠️ Stack
 
-- **Frontend**: React + TypeScript + Vite
-- **UI**: Tailwind CSS + shadcn/ui
-- **Backend**: Supabase (Auth + Database)
-- **IA**: OpenAI (opcional, con fallback mock gratuito)
-- **Deploy**: Vercel
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | React 18 + TypeScript + Vite |
+| UI | Tailwind CSS + shadcn/ui |
+| Backend | Supabase (Auth + PostgreSQL + Edge Functions) |
+| Tests | Vitest |
+| Deploy | Vercel |
 
-## 📦 Instalación
+## 💰 Costo para empezar: $0
+
+- ✅ Supabase Free Tier (50 000 usuarios activos/mes)
+- ✅ Vercel Free Tier (hosting ilimitado)
+- ✅ IA con datos mock incluidos (OpenAI es opcional)
+
+## 📦 Instalación local
 
 ```bash
-# Clonar el repositorio
+# 1. Clonar el repositorio
 git clone https://github.com/alfisogni/clipcraft-studio.git
 cd clipcraft-studio
 
-# Instalar dependencias
+# 2. Instalar dependencias
 npm install
 
-# Configurar variables de entorno
+# 3. Configurar variables de entorno
 cp .env.example .env
-# Edita .env con tus credenciales de Supabase
+# Edita .env con tus credenciales de Supabase (ver sección de configuración)
+
+# 4. Iniciar servidor de desarrollo
+npm run dev
 ```
 
 ## ⚙️ Configuración
 
-### Variables de Entorno
+### Variables de entorno
 
-Tu archivo `.env` ya está configurado con las credenciales de Supabase.
+Copia `.env.example` a `.env` y completa los valores:
 
-### Deploy en Vercel
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=tu_publishable_key
+VITE_SUPABASE_ANON_KEY=tu_anon_key
 
-Para instrucciones paso a paso de deploy:
-**👉 [DEPLOY.md](./DEPLOY.md)**
+# Opcional: para IA generativa avanzada (sin esto usa mock data)
+# OPENAI_API_KEY=sk-...
+```
 
-Este archivo incluye:
-- ✅ Cómo conectar con Vercel
-- ✅ Qué variables de entorno añadir
-- ✅ Cómo actualizar URLs en Supabase
-- ✅ Troubleshooting común
+Obtén tus keys en [supabase.com](https://supabase.com) → tu proyecto → **Settings → API**.
 
-## 🚀 Desarrollo
+> ⚠️ **Nunca comitees el archivo `.env`**. Ya está en `.gitignore`.
+
+### Base de datos
+
+Aplica las migraciones incluidas desde el dashboard de Supabase o con la CLI:
 
 ```bash
-# Iniciar servidor de desarrollo
-npm run dev
-
-# Compilar para producción
-npm run build
-
-# Previsualizar build de producción
-npm run preview
-
-# Ejecutar tests
-npm run test
+supabase db push
 ```
 
-## 📁 Estructura del Proyecto
+## 🚀 Scripts disponibles
 
-```
-clipcraft-studio/
-├── public/              # Assets estáticos
-├── src/
-│   ├── components/      # Componentes React
-│   ├── hooks/          # Custom hooks (useAuth, useProjects)
-│   ├── integrations/   # Supabase client
-│   ├── lib/            # Utilidades
-│   ├── pages/          # Páginas principales (Auth, Index, NotFound)
-│   └── types/          # TypeScript types
-├── supabase/
-│   ├── functions/      # Supabase Edge Functions
-│   └── migrations/     # Database migrations
-└── ...
+```bash
+npm run dev       # Servidor de desarrollo
+npm run build     # Compilar para producción
+npm run preview   # Previsualizar el build
+npm run test      # Ejecutar tests con Vitest
 ```
 
 ## 🌐 Deploy en Vercel
 
-```bash
-# Instalar Vercel CLI
-npm i -g vercel
+1. Importa el repositorio en [vercel.com](https://vercel.com)
+2. Agrega las variables de entorno en **Settings → Environment Variables**
+3. Vercel detecta Vite automáticamente — sin configuración extra
 
-# Desplegar
-vercel --prod
+## 📁 Estructura del proyecto
+
+```
+clipcraft-studio/
+├── public/                  # Assets estáticos
+├── src/
+│   ├── components/          # Componentes React (UI + domain)
+│   │   └── ui/              # Componentes base de shadcn/ui
+│   ├── contexts/            # React contexts (demo mode, etc.)
+│   ├── hooks/               # Custom hooks (useAuth, useProjects)
+│   ├── integrations/        # Clientes de servicios externos
+│   │   └── supabase/        # Cliente y tipos de Supabase
+│   ├── lib/                 # Utilidades y mock data
+│   ├── pages/               # Páginas (Auth, Index, NotFound)
+│   └── types/               # Tipos TypeScript globales
+├── supabase/
+│   ├── functions/           # Edge Functions de Supabase
+│   └── migrations/          # Migraciones SQL
+└── ...
 ```
 
-O conecta tu repositorio de GitHub con Vercel para deploy automático.
+## 🔐 Seguridad
 
-## 🔐 Autenticación
-
-El proyecto usa autenticación por **email/contraseña** con Supabase.
-
-- ✅ **Registro**: Crea cuenta con email y contraseña
-- ✅ **Login**: Inicia sesión con tus credenciales
-- ✅ **100% funcional**: No requiere configuración adicional
+- Las variables de entorno del frontend (`VITE_*`) son públicas por diseño de Vite/Supabase — están protegidas por las **Row Level Security (RLS)** policies de la base de datos.
+- Los secretos del servidor (OpenAI, etc.) se manejan como **Supabase Secrets** en las Edge Functions y nunca se exponen al cliente.
+- Revisa las policies de RLS en las migraciones antes de hacer deploy a producción.
 
 ## 🤝 Contribuir
 
-Las contribuciones son bienvenidas. Por favor:
+Las contribuciones son bienvenidas.
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
+1. Haz un fork del proyecto
+2. Crea tu rama: `git checkout -b feature/mi-feature`
+3. Commitea tus cambios: `git commit -m 'feat: descripción breve'`
+4. Push: `git push origin feature/mi-feature`
 5. Abre un Pull Request
 
 ## 📝 Licencia
 
-Este proyecto es privado.
+MIT — ver [LICENSE](./LICENSE) para más detalles.
 
 ## 👤 Autor
 
-**alfisogni**
-- GitHub: [@alfisogni](https://github.com/alfisogni)
+**Luca Fisogni** ([@alfisogni](https://github.com/alfisogni))
 
 ---
 
