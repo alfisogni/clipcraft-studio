@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { Scissors, Loader2, Sparkles, Video, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { isSupabaseConfigured } from '@/integrations/supabase/client';
 
 const Auth: React.FC = () => {
   const { signInWithEmail, signUpWithEmail } = useAuth();
@@ -81,6 +82,12 @@ const Auth: React.FC = () => {
           </div>
 
 
+
+          {!isSupabaseConfigured && (
+            <p className="text-xs text-muted-foreground text-center rounded-md border border-border/60 bg-secondary/40 px-3 py-2">
+              Auth real no configurada en este deploy. Podés entrar con el usuario demo de abajo.
+            </p>
+          )}
 
           {/* Email / Password form */}
           <form onSubmit={handleEmailAuth} className="space-y-3">

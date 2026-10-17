@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, isSupabaseConfigured } from '@/integrations/supabase/client';
 import { useDemo, DEMO_EMAIL, DEMO_PASSWORD } from '@/contexts/DemoContext';
 import type { User } from '@supabase/supabase-js';
 
@@ -35,6 +35,14 @@ export const useAuth = () => {
       return;
     }
 
+    // Without Supabase env the app used to crash at import (blank blue screen).
+    // Boot to the login UI so demo credentials still work.
+    if (!supabase || !isSupabaseConfigured) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
@@ -57,12 +65,24 @@ export const useAuth = () => {
       return { user: DEMO_USER, session: null } as any;
     }
 
+    if (!supabase || !isSupabaseConfigured) {
+      throw new Error(
+        'Supabase no está configurado en este deploy. Usá demo@clipflow.com / Demo123 o configurá VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY en Vercel.'
+      );
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
   }, [enterDemo]);
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
+    if (!supabase || !isSupabaseConfigured) {
+      throw new Error(
+        'Supabase no está configurado en este deploy. Usá el modo demo o configurá las variables de entorno.'
+      );
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -78,7 +98,9 @@ export const useAuth = () => {
       setUser(null);
       return;
     }
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
   }, [isDemo, exitDemo]);
 
   return { user, loading, isDemo, signInWithEmail, signUpWithEmail, signOut };

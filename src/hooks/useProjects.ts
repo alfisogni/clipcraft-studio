@@ -29,7 +29,8 @@ export const useProjects = (user: User | null) => {
   // ─── REAL MODE: fetch from database ───
   const fetchProjects = useCallback(async () => {
     if (isDemo || !user) { if (!isDemo) { setProjects([]); setLoading(false); } return; }
-    
+    if (!supabase) { setProjects([]); setLoading(false); return; }
+
     setLoading(true);
     const { data: projectRows, error } = await supabase
       .from('projects').select('*').order('created_at', { ascending: false });

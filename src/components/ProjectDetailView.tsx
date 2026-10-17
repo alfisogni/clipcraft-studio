@@ -69,7 +69,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     setPreviewLoading(true);
     setPreviewUrl(null);
 
-    if (project.videoStoragePath) {
+    if (project.videoStoragePath && supabase) {
       try {
         const { data, error } = await supabase.storage
           .from('videos')
